@@ -54,10 +54,11 @@ whether you hit them:
 ## 1.
 
 <!-- Your criterion. It must name a number. -->
-
+The model references the source from the labels and notes 5/5 times
 
 
 **Why this target:**
+This will show if it's pulling from the right material or if it's hallucinating
 
 
 
@@ -66,31 +67,30 @@ whether you hit them:
 ## 2.
 
 <!-- Your criterion. -->
-
+The model shouldn't steer no more than 60% towards the labels that are vague
 
 
 **Why this target:**
 
-
+I want the model to be as detailed as possible
 
 ---
 
 ## 3.
 
 <!-- Your criterion. -->
-
-
+My labels agree with the staff labels on at least 75% of posts.
 
 **Why this target:**
-
+A clear “has a number or not” rule should get high agreement, while fuzzy cases will pull it down
 
 
 ---
 
 ## 4.
-
+The prediction model should be if the confidence is above 65% for four out of five models
 <!-- Your criterion. -->
-
+Would be easier to auto sort the post
 
 
 **Why this target:**
@@ -102,11 +102,11 @@ whether you hit them:
 ## 5.
 
 <!-- Your criterion. -->
-
+Each label should have an F1 of at least 0.69
 
 
 **Why this target:**
-
+No label regarding data should be above 70% 
 
 
 ---
