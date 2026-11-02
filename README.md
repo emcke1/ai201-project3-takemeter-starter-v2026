@@ -22,6 +22,9 @@
 > **The rest of this file is your submission.** Fill it in as you go.
 
 ---
+https://www.reddit.com/r/Theatre/
+https://www.reddit.com/r/Theatre/
+https://www.reddit.com/r/Theatre/
 
 <!-- ─────────────────────────────────────────────────────────────────────────
      HOW TO USE THIS FILE
