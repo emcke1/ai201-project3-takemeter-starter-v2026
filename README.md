@@ -349,7 +349,7 @@ of next unit's variance. -->
 
 <!-- For each criterion still missed: what you'd do, and why you stopped. -->
 
-
+I stopped on milestone four. Please refer to the comments commits for further details.
 
 **The gap between what I meant my labels to capture and what the model
 learned:**
