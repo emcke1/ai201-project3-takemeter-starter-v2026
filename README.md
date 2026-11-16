@@ -156,12 +156,7 @@ of next unit's variance. -->
 
 ## How I Used AI
 
-<!-- Two specific moments — what you asked, what came back, what you changed.
-
-     ⚠️ Plus disclosure of any pre-labelling. If you had a model pre-label a
-     batch and then read and corrected every one, say that. It's an allowed
-     workflow and disclosing it costs you nothing. Not disclosing it is the
-     problem. -->
+ Only 5 of my 23 posts had labels, and those used an older taxonomy (detailed/vague). I had Claude label all 23 against the definitions in label_definitions.txt and fix the CSV quoting. I checked the result loaded correctly. Claude also helped draft this write-up from my results.
 
 **Moment 1**
 
@@ -186,214 +181,70 @@ of next unit's variance. -->
 
 ## Baseline vs. Trained
 
-<!-- Both models on the same posts. `python baseline.py --trained results.json`
-     prints this table for you. -->
-
 | Measure | Baseline | Trained | Difference |
 |---|---|---|---|
-| Overall accuracy |  |  |  |
-| Macro F1 |  |  |  |
-| F1 — `label_one` |  |  |  |
-| F1 — `label_two` |  |  |  |
+| Overall accuracy | 0.500 | 0.500 | +0.000 |
+| Macro F1 | 0.389 | 0.222 | -0.167 |
+| F1 — `analysis` | 0.667 | 0.000 | -0.667 |
+| F1 — `hot_take` | 0.000 | 0.000 | +0.000 |
+| F1 — `reaction` | 0.500 | 0.667 | +0.167 |
 
-**What I predicted before I looked:**
-<!-- Milestone 1 asks you to write this BEFORE seeing the trained numbers. A
-     prediction made afterwards isn't one. -->
+Both scored on the same 4 held-out posts from test_split.csv. Baseline is facebook/bart-large-mnli reading label_definitions.txt. Trained is distilbert-base-uncased, seed 42, on mps (Apple Silicon GPU).
 
-**What the gap actually means:**
-<!-- If the baseline matched your trained model, your fine-tuning added
-     nothing — and that is a real finding, not a failure. Say it plainly. -->
+**What I predicted before I looked:** see the committed note in notes.md.
 
-
+**What the gap actually means:** Fine-tuning added nothing. With 23 posts the trained model learned to answer `reaction` every time, so it tied the baseline on accuracy and lost on macro F1. The baseline at least got the one `analysis` post right by reading my definitions.
 
 ---
 
 ## Run Log — Before
 
-<!-- Five criteria across three seeds. The notebook's section 6 prints the
-     spread table; the Target and Verdict columns are yours. -->
+Device: mps (Apple Silicon GPU), torch 2.15.0. Test split is 4 posts per seed (1 analysis, 1 hot_take, 2 reaction).
 
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. References the source 5/5 times | 5/5 | not measurable | not measurable | not measurable | NOT TESTABLE |
+| 2. No more than 60% of predictions go to one label | ≤ 60% | 100% reaction | 100% reaction | 100% reaction | MISSED |
+| 3. Agreement with staff labels | ≥ 75% | not run | not run | not run | NOT TESTED |
+| 4. Confidence above 65% on 4 of 5 predictions | 4/5 | not checked | not checked | not checked | NOT TESTED |
+| 5. Every label F1 | ≥ 0.69 | 0.00 / 0.00 / 0.67 | 0.00 / 0.00 / 0.67 | 0.00 / 0.00 / 0.67 | MISSED |
 
-### Confusion matrix
+F1 order is analysis / hot_take / reaction. Accuracy was 0.500 and macro F1 0.222 on all three seeds. The spread is zero, but that is not stability. The model predicted `reaction` for every post on every seed.
 
-<!-- ⚠️ TYPED AS A MARKDOWN TABLE. The notebook prints one ready to paste.
-     An image of a matrix earns nothing. -->
+### Confusion matrix (seed 42)
 
-| true \ predicted |  |  |  |
+| true \ predicted | analysis | hot_take | reaction |
 |---|---|---|---|
-| **** |  |  |  |
-| **** |  |  |  |
-| **** |  |  |  |
+| **analysis** | 0 | 0 | 1 |
+| **hot_take** | 0 | 0 | 1 |
+| **reaction** | 0 | 0 | 2 |
 
-**My biggest off-diagonal number, and what it means:**
-<!-- Not "the model made mistakes" — WHICH boundary it didn't learn, and which
-     direction. "7 real analysis posts were called hot_take and only 3 went the
-     other way" is a direction, not just an error rate. -->
-
-
+**My biggest off-diagonal number, and what it means:** Every non-reaction post went to `reaction` and nothing went the other way. The model never learned a boundary at all. It collapsed onto my majority label.
 
 ---
 
 ## Verdicts and Diagnoses
 
-<!-- MET or MISSED against LAST UNIT's target. The target has to hold across
-     all three seeds, not turn up sometimes. -->
-
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | References the source | 5/5 | NOT TESTABLE | A classifier outputs a label, not a source, so there is nothing to check. |
+| 2 | Share of predictions to one label | ≤ 60% | MISSED | 100% of predictions were `reaction` on all three seeds. |
+| 3 | Agreement with staff | ≥ 75% | NOT TESTED | I did not finish Milestone 3. |
+| 4 | Confident predictions | 4 of 5 above 0.65 | NOT TESTED | I did not pull per-prediction confidence before stopping. |
+| 5 | Every label F1 | ≥ 0.69 | MISSED | analysis and hot_take were 0.00 on every seed. |
 
 **Diagnoses**
 
-<!-- For each miss: the cause, and how you know. The four common causes are:
-     too few examples for a label, a boundary you applied inconsistently, a
-     genuinely hard label pair, and a task the model can't reach from this
-     much data.
-
-     ⚠️ Use your agreement report as evidence. It is the only instrument you
-     have that can tell a LABELLING problem from a MODEL problem, and this
-     section is graded on whether you used it that way. -->
-
-
-
----
-
-## Agreement Report
-
-<!-- Your rate against the staff set, and every disagreement adjudicated.
-
-     Remember you labelled these 30 under the STAFF taxonomy in
-     data/staff_taxonomy.md, not your own — so every argument below is made
-     from those definitions and those decision rules. -->
-
-**Agreement rate:** ___ / 30 = ___%
-
-<!-- Nobody grades this number. A 60% who argues every disagreement from the
-     stated rules beats a 95% who wrote "staff was right" nine times. Several
-     of the 30 were chosen because they're genuinely ambiguous — you should be
-     winning some of these. -->
-
-**Disagreements**
-
-<!-- Three lines each: the post, both labels, and who you think is right and
-     why — grounded in the staff definitions you were both applying.
-
-     Then sort each into one of three piles:
-       (a) the rule covered it and I applied it loosely → a consistency problem
-       (b) the rule genuinely doesn't say               → a gap in the definitions
-       (c) the rule is ambiguous here and my reading is defensible → argue it.
-           This is a legitimate win.
-
-     Pile (a) is the one that matters most for your diagnosis: if you applied a
-     written rule two different ways on 30 posts, that is direct evidence about
-     what you did across your own 200. -->
-
-**1.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
-
-**2.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
-
-**What the pattern in my disagreements tells me:**
-
-
-
----
-
-## The Improvement
-
-**What I changed:**
-
-**Which diagnosis pointed at it:**
-
-### Run Log — After
-
-| Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
-|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
-
-**Did it help, and how do I know:**
-
-<!-- If it didn't, say so. Relabelling that didn't help is a genuinely
-     interesting result and earns full credit. -->
-
-
+- **Criteria 2 and 5: too few examples.** Training had 3 analysis and 2 hot_take posts against 10 reaction. Validation loss barely moved (1.084 to 1.068 on seed 42) and validation accuracy stayed at 0.50 every epoch, so the model never separated the labels and just guessed the majority. I can't rule out a labeling problem because I didn't finish the staff agreement check, which is the only tool that would separate the two. With this little data, though, the model never had enough to show a labeling problem anyway.
+- **Criteria 1 and 4: the criteria were written badly.** Criterion 1 asks for something a classifier can't do. Criterion 4's wording doesn't say what's being counted. I've added revisions under each in criteria.md.
 
 ---
 
 ## What's Still Broken
 
-<!-- For each criterion still missed: what you'd do, and why you stopped. -->
+- **Criteria 2 and 5 (missed):** I would label more posts for `analysis` and `hot_take`, at least 20 each, and rerun the three seeds. I stopped at 23 posts on purpose to see what a classifier does with almost no data. The answer is that it guesses the majority label every time.
+- **Criterion 3 (not tested):** I would label the 30 staff posts under the staff taxonomy and run agreement.py. I stopped because I ran out of time.
+- **Criterion 4 (not tested):** I would pull the confidence numbers from results_three_seeds_before.json and check them against the revised criterion. I ran out of time.
+- **Milestone 5:** I did not make an improvement. The change my diagnosis points to is adding examples to the thin labels.
 
-I stopped on milestone four. Please refer to the comments commits for further details.
-
-**The gap between what I meant my labels to capture and what the model
-learned:**
-<!-- Two sentences. Your confusion matrix is the evidence. -->
-
-
-
-<!-- ═════════════════════════════════════════════════════════════════════
-
-     SUBMISSION CHECKLIST — unit 5
-
-       [ ] criteria.md has five numbered criteria, each naming a NUMBER
-       [ ] Each has a reason underneath tied to your data or taxonomy
-       [ ] labels.csv: at least 150 rows, text/label/note, ONE file not split
-       [ ] No label above 70%
-       [ ] All five unit 5 sections have real content
-       [ ] Label Taxonomy includes the decision rule for your hardest boundary
-       [ ] The Dataset includes three hard cases
-       [ ] results.json and test_split.csv committed (the notebook does this)
-       [ ] At least four new commits
-       [ ] Repository URL submitted — WRITE IT DOWN
-
-     SUBMISSION CHECKLIST — unit 6
-
-       [ ] Baseline vs. Trained table, with your prediction written beforehand
-       [ ] Run Log — Before, five criteria across three seeds
-       [ ] Confusion matrix TYPED AS A MARKDOWN TABLE
-       [ ] A verdict on every criterion
-       [ ] A diagnosis for every miss, using the agreement report as evidence
-       [ ] Agreement Report with every disagreement adjudicated
-       [ ] One improvement, with Run Log — After
-       [ ] What's Still Broken
-       [ ] results_three_seeds_before.json, results_three_seeds_after.json,
-           baseline_results.json and
-           agreement_results.json committed
-       [ ] At least four new commits
-       [ ] The SAME repository URL as last unit
-
-     Do not delete and recreate this repository.
-     ═════════════════════════════════════════════════════════════════════ -->
-
----
-
-📖 **How to run this project: [RUNNING.md](RUNNING.md)**
+**The gap between what I meant my labels to capture and what the model learned:** I meant the labels to separate people asking how to run a show, newcomers asking how to start, and people sharing opinions. The confusion matrix shows the model learned none of that and only learned that most posts are `reaction`.
